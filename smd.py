@@ -26,7 +26,8 @@ if not argresults.output_dir:
 	
 else:
 	outputdir = argresults.output_dir
-
+	
+# ASCII art
 # https://patorjk.com/software/taag/#p=display&f=Ivrit&t=Snapchat%0AMemory%0ADownloader%0Av%200.1
 
 print("""\
@@ -52,20 +53,33 @@ print("""\
    \_/    \___(_)_|                                       
                                                    """)
 
-snapurls = [] # Make an array for snapchat memory urls
+snapurls = {} # Make a dictionary for snapchat memory dates and urls
+duplicateswitch = False # Switch for duplicate filenames
+part = 1 # Value for duplicate filename suffix
 f = open(inputfile) # Open specified JSON file
 data = json.load(f) # Return JSON object as a dictionary
 
-# Iterate through the JSON list:
+# Iterate through the JSON list: 
+# TODO: Maybe clean this up. json.load already loads the file as a dictionary
 for i in data["Saved Media"]:
-	snapurls.append(i["Download Link"]) # Add to array
+	datetimeraw = i["Date"].split() # Get the memory date
+	datetime = datetimeraw[0] + '-' + datetimeraw[1].replace(':', '') # Make the date key in format YYYY-MM-DD-HHMMSS
+	if datetime in snapurls: # If already in dictionary (memory saved at the exact same time)
+		if duplicateswitch: part += 1 # Add value if already been through this
+		datetime = datetime + "-" + str(part) # Add suffix to filename
+		snapurls[datetime] = i["Download Link"] # Add the snap url to dictionary with date(+suffix) as the key
+		duplicateswitch = True
+	else:
+		snapurls[datetime] = i["Download Link"] # Add the snap url to dictionary with date as the key
+		duplicateswitch = False
+		part = 1
 
 print("You have", len(snapurls), "memories to download.")
 
-for snapurl in tqdm(snapurls):
-	awslink = requests.post(snapurl) # POST request to Snap URL and receive a link pointing to AWS bucket with your memory
-	filename = awslink.text.split("/")[-1].split("?")[0] # Get filename from AWS bucket link. Doesn't provide headers for some reason?
+for key in tqdm(snapurls):
+	awslink = requests.post(snapurls[key]) # POST request to Snap URL and receive a link pointing to AWS bucket with your memory
+	filename = key + "." + awslink.text.split("/")[-1].split("?")[0].split(".")[1] # Make the filename from the memory date and the AWS link extension
 	fullpath = os.path.join(outputdir, filename) # Get output full path
 	downloadmemory = requests.get(awslink.text) # Download the memory from AWS bucket
-	with open(fullpath, 'wb') as f: # Save to the specified path on disk
-		f.write(downloadmemory.content)
+	with open(fullpath, 'wb') as f: 
+		f.write(downloadmemory.content) # Save to the specified path on disk

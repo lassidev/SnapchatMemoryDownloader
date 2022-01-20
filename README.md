@@ -1,8 +1,6 @@
 # Snapchat Memory Downloader
 
-Decided to delete your Snapchat account, but still wish to keep your saved memories?
-Snapchat currently provides no easy way to mass-download all of your memories. 
-This script is intended to fix that.
+A script to download all of your Sanpchat memories to your computer.
 
 ## Operation
 1. Install Python 3 and pip

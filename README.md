@@ -1,6 +1,6 @@
 # Snapchat Memory Downloader
 
-A script to download all of your Sanpchat memories to your computer.
+A script to download all of your Snapchat memories to your computer.
 
 ## Operation
 1. Install Python 3 and pip
